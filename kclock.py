@@ -8,6 +8,7 @@ from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
 class KClockWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+
         self.resource_dir = getattr(sys, '_MEIPASS', os.path.abspath("."))
         
         # 设置窗口图标
@@ -46,6 +47,10 @@ class KClockWindow(QMainWindow):
         
         # 设置默认音乐
         self.set_default_music()
+
+    def closeEvent(self, event):
+        self.hide()
+        event.ignore()
 
     def get_resource_path(self, filename):
         return os.path.join(self.resource_dir, filename)
@@ -132,6 +137,8 @@ class KClockWindow(QMainWindow):
         # 退出按钮
         exit_btn = QPushButton('退出闹钟')
         exit_btn.clicked.connect(self.close)
+        exit_btn.clicked.connect(QApplication.instance().quit)
+        exit_btn.clicked.connect(self.cleanup_resources)
         layout.addWidget(exit_btn)
     
     def create_system_tray(self):
@@ -144,7 +151,8 @@ class KClockWindow(QMainWindow):
         tray_menu.addAction(show_action)
         
         exit_action = QAction('退出', self)
-        exit_action.triggered.connect(self.close)
+        exit_action.triggered.connect(QApplication.instance().quit)
+        exit_action.triggered.connect(self.cleanup_resources)
         tray_menu.addAction(exit_action)
         
         self.tray_icon.setContextMenu(tray_menu)
@@ -266,6 +274,13 @@ class KClockWindow(QMainWindow):
             self.blink_timer.start(500)
             self.left_time_label.setText('剩余时间: --:--:--')
             self.alarm_time_label.setText('闹钟时间: --:--:--')
+
+    def cleanup_resources(self):
+        self.timer.stop()
+        self.blink_timer.stop()
+        self.player.stop()
+        self.audio_output.deleteLater()
+        self.player.deleteLater()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
