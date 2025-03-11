@@ -156,7 +156,15 @@ class KClockWindow(QMainWindow):
         tray_menu.addAction(exit_action)
         
         self.tray_icon.setContextMenu(tray_menu)
+        self.tray_icon.activated.connect(self.on_tray_double_click)
         self.tray_icon.show()
+
+    def on_tray_double_click(self, reason):
+        if reason == QSystemTrayIcon.ActivationReason.DoubleClick:
+            if self.isMinimized():
+                self.showNormal()
+            else:
+                self.show()
     
     def adjust_time(self, seconds):
         total_seconds = self.leftTime.hour() * 3600 + self.leftTime.minute() * 60 + self.leftTime.second()
