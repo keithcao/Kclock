@@ -5,6 +5,12 @@ from PyQt6.QtGui import QIcon, QAction
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFileDialog, QSystemTrayIcon, QMenu, QRadioButton
 from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
 
+# 版权声明
+"""
+This program uses PyQt6, which is Copyright (c) Riverbank Computing Limited
+and is licensed under the terms of the GPL 3.0 license.
+"""
+
 class KClockWindow(QMainWindow):
     def __init__(self):
         super().__init__()
