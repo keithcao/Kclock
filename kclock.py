@@ -69,8 +69,16 @@ class KClockWindow(QMainWindow):
         
         # 创建中央部件和布局
         central_widget = QWidget()
+        # central_widget.setStyleSheet('background-color:#a8e1ff;')
         self.setCentralWidget(central_widget)
         main_layout = QVBoxLayout(central_widget)
+        
+        # 倒计时控制按钮
+        self.start_btn = QPushButton('开始倒计时')
+        self.start_btn.setStyleSheet('background-color:#1296db; color: white;border-radius: 10px;padding: 10px;')
+        self.start_btn.clicked.connect(self.toggle_clock)
+        self.start_btn.hide()
+        main_layout.addWidget(self.start_btn)
         
         # 时间显示区域
         self.current_time_label = QLabel('')
@@ -128,12 +136,6 @@ class KClockWindow(QMainWindow):
             btn_layout.addWidget(btn)
         
         layout.addLayout(btn_layout)
-        
-        # 倒计时控制按钮
-        self.start_btn = QPushButton('开始倒计时')
-        self.start_btn.clicked.connect(self.toggle_clock)
-        self.start_btn.hide()
-        layout.addWidget(self.start_btn)
         
         # 试听按钮
         self.preview_btn = QPushButton('试听')
@@ -220,8 +222,10 @@ class KClockWindow(QMainWindow):
         self.icon_visible = not self.icon_visible
         if self.icon_visible:
             self.tray_icon.setIcon(QIcon(self.get_resource_path('Kclock.png')))
+            self.setWindowTitle('时间到了!')
         else:
             self.tray_icon.setIcon(QIcon())
+            self.setWindowTitle('--------')
 
     def toggle_clock(self):
         self.clock = not self.clock
@@ -243,6 +247,7 @@ class KClockWindow(QMainWindow):
             self.timer.stop()
             self.blink_timer.stop()
             self.tray_icon.setIcon(QIcon(self.get_resource_path('Kclock.png')))
+            self.setWindowTitle('Kclock（作者：曹开春）')
     
     def toggle_preview(self):
         if self.preview_btn.text() == '试听':
@@ -281,6 +286,7 @@ class KClockWindow(QMainWindow):
             total_seconds -= 1
             self.leftTime = self.leftTime.addSecs(-1)
             self.left_time_label.setText('剩余时间: ' + self.leftTime.toString('HH:mm:ss'))
+            self.setWindowTitle(self.leftTime.toString('HH:mm:ss'))
         
         # 触发闹钟
         if self.clock and total_seconds <= 0:
