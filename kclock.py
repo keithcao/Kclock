@@ -193,6 +193,7 @@ class KClockWindow(QMainWindow):
         if not self.timer.isActive():
             self.clock = True
             self.start_btn.setText('停止倒计时')
+            self.start_btn.setStyleSheet('background-color:#1296db; color: white;border-radius: 10px;padding: 10px;')
             self.start_btn.show()
             self.current_time_label.show()
             self.timer.start(1000)
@@ -223,9 +224,11 @@ class KClockWindow(QMainWindow):
         if self.icon_visible:
             self.tray_icon.setIcon(QIcon(self.get_resource_path('Kclock.png')))
             self.setWindowTitle('时间到了!')
+            self.start_btn.setStyleSheet('background-color:#1296db; color: white;border-radius: 10px;padding: 10px;')
         else:
             self.tray_icon.setIcon(QIcon())
             self.setWindowTitle('--------')
+            self.start_btn.setStyleSheet('background-color:#c00; color:white;border-radius: 10px;padding: 10px;')
 
     def toggle_clock(self):
         self.clock = not self.clock
@@ -292,6 +295,11 @@ class KClockWindow(QMainWindow):
         if self.clock and total_seconds <= 0:
             self.player.play()
             self.blink_timer.start(500)
+            # 激活主窗口
+            if self.isMinimized():
+                self.showNormal()
+            self.raise_()
+            self.activateWindow()
             self.left_time_label.setText('剩余时间: --:--:--')
             self.alarm_time_label.setText('闹钟时间: --:--:--')
 
