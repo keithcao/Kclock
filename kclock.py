@@ -72,19 +72,28 @@ class KClockWindow(QMainWindow):
         # central_widget.setStyleSheet('background-color:#a8e1ff;')
         self.setCentralWidget(central_widget)
         main_layout = QVBoxLayout(central_widget)
+
+        # 时间调整按钮
+        time_buttons = [
+            ('+1m', 60), ('+5m', 300), ('+30m', 1800),
+            ('-1m', -60), ('-5m', -300), ('-30m', -1800),
+            ('+10s', 10), ('-10s', -10)
+        ]
+        
+        btn_layout = QHBoxLayout()
+        for text, value in time_buttons:
+            btn = QPushButton(text)
+            btn.clicked.connect(lambda _, v=value: self.adjust_time(v))
+            btn_layout.addWidget(btn)
+        
+        main_layout.addLayout(btn_layout)
         
         # 倒计时控制按钮
-        self.start_btn = QPushButton('开始倒计时')
-        self.start_btn.setStyleSheet('background-color:#1296db; color: white;border-radius: 10px;padding: 10px;')
+        self.start_btn = QPushButton('点击+-按钮开始倒计时')
+        self.start_btn.setStyleSheet('background-color:#ccc; color: white;border-radius: 10px;padding: 10px;')
         self.start_btn.clicked.connect(self.toggle_clock)
-        self.start_btn.hide()
+        self.start_btn.setDisabled(True)
         main_layout.addWidget(self.start_btn)
-        
-        # 时间显示区域
-        self.current_time_label = QLabel('')
-        self.current_time_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.current_time_label.hide()
-        main_layout.addWidget(self.current_time_label)
         
         # 剩余时间和闹钟时间显示
         time_layout = QHBoxLayout()
@@ -92,6 +101,10 @@ class KClockWindow(QMainWindow):
         self.alarm_time_label = QLabel('闹钟时间: --:--:--')
         time_layout.addWidget(self.left_time_label)
         time_layout.addWidget(self.alarm_time_label)
+         # 时间显示区域
+        self.current_time_label = QLabel('')
+        self.current_time_label.setStyleSheet("opacity: 0;")
+        time_layout.addWidget(self.current_time_label)
         main_layout.addLayout(time_layout)
         
         # 按钮布局
@@ -122,20 +135,6 @@ class KClockWindow(QMainWindow):
         music_layout.addWidget(self.music_select_btn)
         layout.addWidget(music_group)
 
-        # 时间调整按钮
-        time_buttons = [
-            ('+1m', 60), ('+5m', 300), ('+30m', 1800),
-            ('-1m', -60), ('-5m', -300), ('-30m', -1800),
-            ('+10s', 10), ('-10s', -10)
-        ]
-        
-        btn_layout = QHBoxLayout()
-        for text, value in time_buttons:
-            btn = QPushButton(text)
-            btn.clicked.connect(lambda _, v=value: self.adjust_time(v))
-            btn_layout.addWidget(btn)
-        
-        layout.addLayout(btn_layout)
         
         # 试听按钮
         self.preview_btn = QPushButton('试听')
@@ -194,8 +193,8 @@ class KClockWindow(QMainWindow):
             self.clock = True
             self.start_btn.setText('停止倒计时')
             self.start_btn.setStyleSheet('background-color:#1296db; color: white;border-radius: 10px;padding: 10px;')
-            self.start_btn.show()
-            self.current_time_label.show()
+            self.start_btn.setDisabled(False)
+            self.current_time_label.setStyleSheet("opacity: 1;")
             self.timer.start(1000)
     
     def set_default_music(self):
@@ -234,15 +233,14 @@ class KClockWindow(QMainWindow):
         self.clock = not self.clock
         if self.clock:
             self.start_btn.setText('停止倒计时')
-            self.start_btn.show()
-            self.current_time_label.show()
+            self.start_btn.setDisabled(False)
             self.timer.start(1000)
             self.blink_timer.start(500)  # 500ms闪烁间隔
             self.curTime = QTime.currentTime()
         else:
-            self.start_btn.setText('开始倒计时')
-            self.start_btn.hide()
-            self.current_time_label.hide()
+            self.start_btn.setText('点击+-按钮开始倒计时')
+            self.start_btn.setStyleSheet('background-color:#ccc; color: white;border-radius: 10px;padding: 10px;')
+            self.start_btn.setDisabled(True)
             self.leftTime = QTime(0, 0, 0)
             self.left_time_label.setText('剩余时间: --:--:--')
             self.alarm_time_label.setText('闹钟时间: --:--:--')
@@ -251,6 +249,7 @@ class KClockWindow(QMainWindow):
             self.blink_timer.stop()
             self.tray_icon.setIcon(QIcon(self.get_resource_path('Kclock.png')))
             self.setWindowTitle('Kclock（作者：曹开春）')
+            self.current_time_label.setText('')
     
     def toggle_preview(self):
         if self.preview_btn.text() == '试听':
