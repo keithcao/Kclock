@@ -1,6 +1,6 @@
 import os
 import sys
-from PyQt6.QtCore import QTimer, QTime, Qt, QUrl
+from PyQt6.QtCore import QTimer, QTime, Qt, QUrl, QDateTime
 from PyQt6.QtGui import QIcon, QAction
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFileDialog, QSystemTrayIcon, QMenu, QRadioButton
 from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
@@ -22,8 +22,9 @@ class KClockWindow(QMainWindow):
         
         # 初始化变量
         self.curTime = QTime.currentTime()
-        self.leftTime = QTime(0, 0, 0)
+        self.leftTime = 0
         self.clock = False
+        self.alarm_datetime = QTime()
         self.alarm_duration = 0  # 0表示一直播放
         
         # 定时器设置
@@ -84,29 +85,33 @@ class KClockWindow(QMainWindow):
         for text, value in time_buttons:
             btn = QPushButton(text)
             btn.clicked.connect(lambda _, v=value: self.adjust_time(v))
-            btn_layout.addWidget(btn)
-        
+            btn_layout.addWidget(btn)        
         main_layout.addLayout(btn_layout)
-        
-        # 倒计时控制按钮
-        self.start_btn = QPushButton('点击+-按钮开始倒计时')
-        self.start_btn.setStyleSheet('background-color:#ccc; color: white;border-radius: 10px;padding: 10px;')
-        self.start_btn.clicked.connect(self.toggle_clock)
-        self.start_btn.setDisabled(True)
-        main_layout.addWidget(self.start_btn)
-        
+            
         # 剩余时间和闹钟时间显示
         time_layout = QHBoxLayout()
         self.left_time_label = QLabel('剩余时间: --:--:--')
         self.alarm_time_label = QLabel('闹钟时间: --:--:--')
+        self.alarm_time_label.setStyleSheet('font-size: 20px;color: red;')
         time_layout.addWidget(self.left_time_label)
         time_layout.addWidget(self.alarm_time_label)
          # 时间显示区域
         self.current_time_label = QLabel('')
         self.current_time_label.setStyleSheet("opacity: 0;")
         time_layout.addWidget(self.current_time_label)
+        time_layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
+        self.left_time_label.setAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignHCenter)
+        self.alarm_time_label.setAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignHCenter)
+        self.current_time_label.setAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignHCenter)
         main_layout.addLayout(time_layout)
-        
+
+         # 倒计时控制按钮
+        self.start_btn = QPushButton('点击+-按钮开始倒计时')
+        self.start_btn.setStyleSheet('background-color:#ccc; color: white;border-radius: 10px;padding: 10px;')
+        self.start_btn.clicked.connect(self.toggle_clock)
+        self.start_btn.setDisabled(True)
+        main_layout.addWidget(self.start_btn)
+       
         # 按钮布局
         self.create_control_buttons(main_layout)
         
@@ -174,14 +179,31 @@ class KClockWindow(QMainWindow):
                 self.show()
     
     def adjust_time(self, seconds):
-        total_seconds = self.leftTime.hour() * 3600 + self.leftTime.minute() * 60 + self.leftTime.second()
-        total_seconds = max(0, total_seconds + seconds)
-        self.leftTime = QTime(0, 0, 0).addSecs(total_seconds)
+        # 计算总秒数时直接基于调整值而非当前剩余时间
+        current_datetime = QDateTime.currentDateTime()
+        if not hasattr(self, 'alarm_datetime') or self.alarm_datetime.isNull() or not self.alarm_datetime.isValid():
+            self.alarm_datetime = current_datetime.addSecs(seconds)
+        else:
+            self.alarm_datetime = self.alarm_datetime.addSecs(seconds)
+
+        remaining_seconds = current_datetime.secsTo(self.alarm_datetime)
+        if remaining_seconds <= 0:
+            self.alarm_datetime = QDateTime()
+            self.player.play()
+            self.left_time_label.setText('剩余时间: --:--:--')
+            self.alarm_time_label.setText('闹钟时间: --:--:--')
+            self.clock=False
+            self.leftTime=0
+            self.toggle_clock()
+            return
         
-        # 更新界面显示
-        self.left_time_label.setText('剩余时间: ' + self.leftTime.toString('HH:mm:ss'))
-        alarm_time = QTime.currentTime().addSecs(total_seconds)
-        self.alarm_time_label.setText('闹钟时间: ' + alarm_time.toString('HH:mm:ss'))
+        self.leftTime = remaining_seconds
+        hours = remaining_seconds // 3600
+        minutes = (remaining_seconds % 3600) // 60
+        seconds = remaining_seconds % 60
+        
+        self.left_time_label.setText(f'剩余时间: {hours:02d}:{minutes:02d}:{seconds:02d}')
+        self.alarm_time_label.setText(f'闹钟时间: {self.alarm_datetime.toString("yyyy-MM-dd HH:mm:ss")}')
 
         # 停止当前播放的音乐
         self.player.stop()
@@ -189,7 +211,7 @@ class KClockWindow(QMainWindow):
 
         # 更新当前时间并启动定时器
         self.curTime = QTime.currentTime()
-        if not self.timer.isActive():
+        if not self.timer.isActive(): 
             self.clock = True
             self.start_btn.setText('停止倒计时')
             self.start_btn.setStyleSheet('background-color:#1296db; color: white;border-radius: 10px;padding: 10px;')
@@ -238,10 +260,11 @@ class KClockWindow(QMainWindow):
             self.blink_timer.start(500)  # 500ms闪烁间隔
             self.curTime = QTime.currentTime()
         else:
+            self.alarm_datetime=QTime()
             self.start_btn.setText('点击+-按钮开始倒计时')
             self.start_btn.setStyleSheet('background-color:#ccc; color: white;border-radius: 10px;padding: 10px;')
             self.start_btn.setDisabled(True)
-            self.leftTime = QTime(0, 0, 0)
+            self.leftTime = 0
             self.left_time_label.setText('剩余时间: --:--:--')
             self.alarm_time_label.setText('闹钟时间: --:--:--')
             self.player.stop()
@@ -276,22 +299,31 @@ class KClockWindow(QMainWindow):
     
     def update_time(self):
         # 更新当前时间
-        self.curTime = self.curTime.addSecs(1)
+        self.curTime = QTime.currentTime()
         self.current_time_label.setText('当前时间: ' + self.curTime.toString('HH:mm:ss'))
         
         # 更新剩余时间
-        total_seconds = self.leftTime.hour() * 3600 + \
-                      self.leftTime.minute() * 60 + \
-                      self.leftTime.second()
+        remaining_seconds = self.leftTime
         
-        if total_seconds > 0:
-            total_seconds -= 1
-            self.leftTime = self.leftTime.addSecs(-1)
-            self.left_time_label.setText('剩余时间: ' + self.leftTime.toString('HH:mm:ss'))
-            self.setWindowTitle(self.leftTime.toString('HH:mm:ss'))
+        if remaining_seconds > 0:
+            remaining_seconds -= 1
+            # 计算小时、分钟和秒数
+            hours = remaining_seconds // 3600
+            minutes = (remaining_seconds % 3600) // 60
+            seconds = remaining_seconds % 60
+            # 格式化时间
+            formatted_time = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+            self.leftTime = remaining_seconds
+            self.left_time_label.setText('剩余时间: ' + formatted_time)
+            self.setWindowTitle(formatted_time)
+        
+        # if total_seconds <= 0:
+        #     self.left_time_label.setText('剩余时间: --:--:--')
+        #     self.alarm_time_label.setText('闹钟时间: --:--:--')
+        #     self.clock = False
         
         # 触发闹钟
-        if self.clock and total_seconds <= 0:
+        if self.alarm_datetime.isValid() and self.clock and remaining_seconds <= 0:
             self.player.play()
             self.blink_timer.start(500)
             # 激活主窗口
