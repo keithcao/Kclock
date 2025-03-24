@@ -304,6 +304,12 @@ class KClockWindow(QMainWindow):
         
         # 更新剩余时间
         remaining_seconds = self.leftTime
+        curDateTime= QDateTime.currentDateTime()
+        if self.alarm_datetime.isValid():
+            if abs(remaining_seconds - curDateTime.secsTo(self.alarm_datetime)) > 1:
+                self.leftTime = curDateTime.secsTo(self.alarm_datetime)
+        else:
+            return
         
         if remaining_seconds > 0:
             remaining_seconds -= 1
@@ -316,11 +322,6 @@ class KClockWindow(QMainWindow):
             self.leftTime = remaining_seconds
             self.left_time_label.setText('剩余时间: ' + formatted_time)
             self.setWindowTitle(formatted_time)
-        
-        # if total_seconds <= 0:
-        #     self.left_time_label.setText('剩余时间: --:--:--')
-        #     self.alarm_time_label.setText('闹钟时间: --:--:--')
-        #     self.clock = False
         
         # 触发闹钟
         if self.alarm_datetime.isValid() and self.clock and remaining_seconds <= 0:
