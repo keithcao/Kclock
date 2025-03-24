@@ -18,7 +18,7 @@ class KClockWindow(QMainWindow):
         self.resource_dir = getattr(sys, '_MEIPASS', os.path.abspath("."))
         
         # 设置窗口图标
-        self.setWindowIcon(QIcon(self.get_resource_path('Kclock.png')))
+        self.setWindowIcon(QIcon(self.get_resource_path('Kclock.ico')))
         
         # 初始化变量
         self.curTime = QTime.currentTime()
@@ -155,7 +155,7 @@ class KClockWindow(QMainWindow):
     
     def create_system_tray(self):
         self.tray_icon = QSystemTrayIcon(self)
-        self.tray_icon.setIcon(QIcon(self.get_resource_path('Kclock.png')))
+        self.tray_icon.setIcon(QIcon(self.get_resource_path('Kclock.ico')))
         
         tray_menu = QMenu()
         show_action = QAction('显示', self)
@@ -243,7 +243,7 @@ class KClockWindow(QMainWindow):
     def toggle_icon(self):
         self.icon_visible = not self.icon_visible
         if self.icon_visible:
-            self.tray_icon.setIcon(QIcon(self.get_resource_path('Kclock.png')))
+            self.tray_icon.setIcon(QIcon(self.get_resource_path('Kclock.ico')))
             self.setWindowTitle('时间到了!')
             self.start_btn.setStyleSheet('background-color:#1296db; color: white;border-radius: 10px;padding: 10px;')
         else:
@@ -270,7 +270,7 @@ class KClockWindow(QMainWindow):
             self.player.stop()
             self.timer.stop()
             self.blink_timer.stop()
-            self.tray_icon.setIcon(QIcon(self.get_resource_path('Kclock.png')))
+            self.tray_icon.setIcon(QIcon(self.get_resource_path('Kclock.ico')))
             self.setWindowTitle('Kclock（作者：曹开春）')
             self.current_time_label.setText('')
     
