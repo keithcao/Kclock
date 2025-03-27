@@ -24,7 +24,7 @@ class KClockWindow(QMainWindow):
         self.curTime = QTime.currentTime()
         self.leftTime = 0
         self.clock = False
-        self.alarm_datetime = QTime()
+        self.alarm_datetime = QDateTime()
         self.alarm_duration = 0  # 0表示一直播放
         
         # 定时器设置
@@ -55,9 +55,10 @@ class KClockWindow(QMainWindow):
         # 设置默认音乐
         self.set_default_music()
 
-    def closeEvent(self, event):
+    def closeEvent(self, a0):
         self.hide()
-        event.ignore()
+        if a0 is not None:
+            a0.ignore()
 
     def get_resource_path(self, filename):
         return os.path.join(self.resource_dir, filename)
@@ -149,7 +150,9 @@ class KClockWindow(QMainWindow):
         # 退出按钮
         exit_btn = QPushButton('退出闹钟')
         exit_btn.clicked.connect(self.close)
-        exit_btn.clicked.connect(QApplication.instance().quit)
+        app = QApplication.instance()
+        if app is not None:
+            exit_btn.clicked.connect(app.quit)
         exit_btn.clicked.connect(self.cleanup_resources)
         layout.addWidget(exit_btn)
     
@@ -163,7 +166,9 @@ class KClockWindow(QMainWindow):
         tray_menu.addAction(show_action)
         
         exit_action = QAction('退出', self)
-        exit_action.triggered.connect(QApplication.instance().quit)
+        app = QApplication.instance()
+        if app is not None:
+            exit_action.triggered.connect(app.quit)
         exit_action.triggered.connect(self.cleanup_resources)
         tray_menu.addAction(exit_action)
         
@@ -260,7 +265,7 @@ class KClockWindow(QMainWindow):
             self.blink_timer.start(500)  # 500ms闪烁间隔
             self.curTime = QTime.currentTime()
         else:
-            self.alarm_datetime=QTime()
+            self.alarm_datetime=QDateTime()
             self.start_btn.setText('点击+-按钮开始倒计时')
             self.start_btn.setStyleSheet('background-color:#ccc; color: white;border-radius: 10px;padding: 10px;')
             self.start_btn.setDisabled(True)
